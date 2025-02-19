@@ -6,13 +6,19 @@
 //
 
 import Foundation
+import Combine
 
 @MainActor
 public class HubClient {
   @WebActor
-  var ws: WebSocketCore?
+  @Published var ws: WebSocketCore?
   var connect: Task<Void, Error>?
   let request: URLRequest
+  @Published
+  @WebActor
+  public var isConnected = false
+  @WebActor
+  private var connectedTask: AnyCancellable?
   public init(port: Int = 1997) {
     request = URLRequest(url: URL(string: "ws://127.0.0.1:\(port)")!)
   }
@@ -47,6 +53,11 @@ public class HubClient {
   @WebActor
   private func createWebsocket() async -> WebSocketCore {
     let ws = WebSocketCore(request: request)
+    connectedTask = ws.$connection.map { $0 != nil }.sink { [weak self] isConnected in
+      Task {
+        self?.isConnected = isConnected
+      }
+    }
     self.ws = ws
     await MainActor.run {
       connect = Task {
