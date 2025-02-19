@@ -22,7 +22,19 @@ public class HubClient {
   }
   @WebActor
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
-    try await send(path, nil as Optional<Int>)
+    try await send(path, Empty())
+  }
+  @WebActor
+  public func send(_ path: String) async throws {
+    _ = try await send(path, Empty()) as Empty?
+  }
+  @WebActor
+  public func send<Body: Encodable>(_ path: String, _ body: Body?) async throws {
+    if let ws {
+      _ = try await ws.send(path, body) as Int?
+    } else {
+      _ = try await createWebsocket().send(path, body) as Empty?
+    }
   }
   @WebActor
   public func send<Body: Encodable, Output: Decodable>(_ path: String, _ body: Body?) async throws -> Output {
@@ -45,5 +57,13 @@ public class HubClient {
   }
   deinit {
     connect?.cancel()
+  }
+  struct Empty: Codable {
+    init() { }
+    init(from decoder: any Decoder) throws {
+    }
+    func encode(to encoder: any Encoder) throws {
+      
+    }
   }
 }
