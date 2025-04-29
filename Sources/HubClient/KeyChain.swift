@@ -39,7 +39,7 @@ public struct KeyChain {
     return signature.base64EncodedString()
   }
 
-  func publicKey() -> String {
+  public func publicKey() -> String {
     // ed25519 prefix
     let prefix = Data([0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00])
     return (prefix + privateKey.publicKey.rawRepresentation).base64EncodedString()
