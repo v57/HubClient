@@ -15,9 +15,18 @@ public class HubClient {
   public var isConnected = false
   let channel: Channel<Void>
   let sender: ClientSender<Void>
-  public init(_ port: Int = 1997) {
+  public init(_ port: Int = 1997, keyChain: KeyChain? = nil) {
     channel = Channel()
-    sender = channel.connect(port)
+    if let keyChain {
+      sender = channel.connect(port, options: .init(headers: {
+        let key = keyChain.publicKey()
+        let time = "\(Int(Date().timeIntervalSince1970 + 60))"
+        let sign = keyChain.sign(text: time)
+        return ["auth": "key.\(key).\(sign).\(time)"]
+      }))
+    } else {
+      sender = channel.connect(port)
+    }
   }
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
     try await sender.send(path)
