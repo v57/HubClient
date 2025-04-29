@@ -1,0 +1,15 @@
+{
+  "originHash" : "5bdab249a78a19c49ac93872cf127a3e48a243c7428be7f2e1773faa765e8981",
+  "pins" : [
+    {
+      "identity" : "channelswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/v57/ChannelSwift.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7d21e68b89d6c69e27f0df644be14e8feab025b3"
+      }
+    }
+  ],
+  "version" : 3
+}

@@ -7,74 +7,28 @@
 
 import Foundation
 import Combine
+import Channel
 
 @MainActor
 public class HubClient {
-  @WebActor
-  @Published var ws: WebSocketCore?
-  var connect: Task<Void, Error>?
-  let request: URLRequest
   @Published
-  @WebActor
   public var isConnected = false
-  @WebActor
-  private var connectedTask: AnyCancellable?
-  public init(port: Int = 1997) {
-    request = URLRequest(url: URL(string: "ws://127.0.0.1:\(port)")!)
+  let channel: Channel<Void>
+  let sender: ClientSender<Void>
+  public init(_ port: Int = 1997) {
+    channel = Channel()
+    sender = channel.connect(port)
   }
-  @WebActor
-  public func test() {
-    
-  }
-  @WebActor
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
-    try await send(path, Empty())
+    try await sender.send(path)
   }
-  @WebActor
   public func send(_ path: String) async throws {
-    _ = try await send(path, Empty()) as Empty?
+    try await sender.send(path)
   }
-  @WebActor
   public func send<Body: Encodable>(_ path: String, _ body: Body?) async throws {
-    if let ws {
-      _ = try await ws.send(path, body) as Int?
-    } else {
-      _ = try await createWebsocket().send(path, body) as Empty?
-    }
+    try await sender.send(path, body)
   }
-  @WebActor
   public func send<Body: Encodable, Output: Decodable>(_ path: String, _ body: Body?) async throws -> Output {
-    if let ws {
-      return try await ws.send(path, body)
-    } else {
-      return try await createWebsocket().send(path, body)
-    }
-  }
-  @WebActor
-  private func createWebsocket() async -> WebSocketCore {
-    let ws = WebSocketCore(request: request)
-    connectedTask = ws.$connection.map { $0 != nil }.sink { [weak self] isConnected in
-      Task {
-        self?.isConnected = isConnected
-      }
-    }
-    self.ws = ws
-    await MainActor.run {
-      connect = Task {
-        try await ws.connect()
-      }
-    }
-    return ws
-  }
-  deinit {
-    connect?.cancel()
-  }
-  struct Empty: Codable {
-    init() { }
-    init(from decoder: any Decoder) throws {
-    }
-    func encode(to encoder: any Encoder) throws {
-      
-    }
+    try await sender.send(path, body)
   }
 }
