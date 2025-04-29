@@ -8,6 +8,5 @@ let package = Package(
   dependencies: [.package(url: "https://github.com/v57/ChannelSwift.git", branch: "main")],
   targets: [
     .target(name: "HubClient", dependencies: [.product(name: "Channel", package: "ChannelSwift")]),
-    .executableTarget(name: "Example", dependencies: ["HubClient"]),
   ]
 )
