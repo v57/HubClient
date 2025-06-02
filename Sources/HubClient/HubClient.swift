@@ -11,10 +11,11 @@ import Channel
 
 @MainActor
 public class HubClient {
-  @Published
-  public var isConnected = false
-  let channel: Channel<Void>
-  let sender: ClientSender<Void>
+  public var isConnected: Published<Bool>.Publisher {
+    sender.ws.$isConnected
+  }
+  private let channel: Channel<Void>
+  private let sender: ClientSender<Void>
   public init(_ port: Int = 1997, keyChain: KeyChain? = nil) {
     channel = Channel()
     if let keyChain {
