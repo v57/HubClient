@@ -14,6 +14,10 @@ public class HubClient {
   public var isConnected: Published<Bool>.Publisher {
     sender.ws.$isConnected
   }
+  public var debugNetwork: Bool {
+    get { sender.ws.debug }
+    set { sender.ws.debug = newValue }
+  }
   private let channel: Channel<Void>
   private let sender: ClientSender<Void>
   public init(_ port: Int = 1997, keyChain: KeyChain? = nil) {
