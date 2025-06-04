@@ -45,4 +45,16 @@ public class HubClient {
   public func send<Body: Encodable, Output: Decodable>(_ path: String, _ body: Body?) async throws -> Output {
     try await sender.send(path, body)
   }
+  public func values<Output: Decodable>(_ path: String) -> Values<Void, EmptyCodable, Output> {
+    sender.values(path)
+  }
+  public func values(_ path: String) -> Values<Void, EmptyCodable, EmptyCodable> {
+    sender.values(path)
+  }
+  public func values<Body: Encodable>(_ path: String, _ body: Body?) -> Values<Void, Body, EmptyCodable> {
+    sender.values(path, body)
+  }
+  public func values<Body: Encodable, Output: Decodable>(_ path: String, _ body: Body?) -> Values<Void, Body, Output> {
+    sender.values(path, body)
+  }
 }
