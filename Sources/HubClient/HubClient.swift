@@ -11,6 +11,7 @@ import Channel
 
 @MainActor
 public class HubClient {
+  public static var local: URL { URL(string: "ws://127.0.0.1:1997")! }
   public var isConnected: Published<Bool>.Publisher {
     sender.ws.$isConnected
   }
@@ -20,17 +21,17 @@ public class HubClient {
   }
   private let channel: Channel<Void>
   private let sender: ClientSender<Void>
-  public init(_ port: Int = 1997, keyChain: KeyChain? = nil) {
+  public init(_ url: URL = HubClient.local, keyChain: KeyChain? = nil) {
     channel = Channel()
     if let keyChain {
-      sender = channel.connect(port, options: .init(headers: {
+      sender = channel.connect(url, options: .init(headers: {
         let key = keyChain.publicKey()
         let time = "\(Int(Date().timeIntervalSince1970 + 60))"
         let sign = keyChain.sign(text: time)
         return ["auth": "key.\(key).\(sign).\(time)"]
       }))
     } else {
-      sender = channel.connect(port)
+      sender = channel.connect(url)
     }
   }
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
