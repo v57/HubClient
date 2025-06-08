@@ -11,7 +11,7 @@ import Channel
 
 @MainActor
 public class HubClient {
-  public static var local: URL { URL(string: "ws://127.0.0.1:1997")! }
+  public nonisolated static var local: URL { URL(string: "ws://127.0.0.1:1997")! }
   public var isConnected: Published<Bool>.Publisher {
     sender.ws.$isConnected
   }
