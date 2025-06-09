@@ -58,4 +58,7 @@ public class HubClient {
   public func values<Body: Encodable, Output: Decodable>(_ path: String, _ body: Body?) -> Values<Void, Body, Output> {
     sender.values(path, body)
   }
+  public func stop() {
+    sender.stop()
+  }
 }
