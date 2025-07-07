@@ -8,7 +8,7 @@
 import Foundation
 import CryptoKit
 
-public struct KeyChain {
+public struct KeyChain: Sendable {
   private static let fileURL: URL = FileManager.default
     .urls(for: .documentDirectory, in: .userDomainMask)[0]
     .appendingPathComponent("ed25519.key")
