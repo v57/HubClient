@@ -9,11 +9,14 @@ import Foundation
 import Channel
 
 @MainActor
-public struct HubService {
+public class HubService {
   let channel: Channel<Void>
   var apps = [AppHeader]()
   var api: [String] {
     Array(Set(channel.postApi.keys).union(channel.streamApi.keys))
+  }
+  init(channel: Channel<Void>) {
+    self.channel = channel
   }
   public func post<Input: Decodable, Output: Encodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Output)) -> Self {
     _ = channel.post(path, request: request)
@@ -46,11 +49,11 @@ public struct HubService {
   }
 }
 
-struct AppHeader: Encodable {
+struct AppHeader: Codable, Sendable {
   var type: AppType
   var name: String
   var path: String
-  enum AppType: String, Encodable {
+  enum AppType: String, Codable {
     case app
   }
 }
