@@ -19,16 +19,25 @@ public class HubClient {
     get { sender.ws.debug }
     set { sender.ws.debug = newValue }
   }
-  private let channel: Channel<Void>
-  private let sender: ClientSender<Void>
+  let channel: Channel<Void>
+  let service: HubService
+  private var sender: ClientSender<Void>!
   public init(_ url: URL = HubClient.local, keyChain: KeyChain? = nil) {
     channel = Channel()
+    service = HubService(channel: channel)
     if let keyChain {
-      sender = channel.connect(url, options: .init(headers: {
+      sender = nil
+      sender = channel.connect(url, options: ClientOptions(headers: {
         let key = keyChain.publicKey()
         let time = "\(Int(Date().timeIntervalSince1970 + 60))"
         let sign = keyChain.sign(text: time)
         return ["auth": "key.\(key).\(sign).\(time)"]
+      }, onConnect: { [weak self] sender in
+        guard let self else { return }
+        let update = await HubService.Update(add: service.api, addApps: service.apps)
+        if !update.isEmpty {
+          try await sender.send("hub/service/update", update)
+        }
       }))
     } else {
       sender = channel.connect(url)
@@ -62,3 +71,4 @@ public class HubClient {
     sender.stop()
   }
 }
+
