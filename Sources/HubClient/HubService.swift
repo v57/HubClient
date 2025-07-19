@@ -49,12 +49,17 @@ public class HubService {
   }
 }
 
-struct AppHeader: Codable, Sendable {
-  var type: AppType
-  var name: String
-  var path: String
-  enum AppType: String, Codable {
+public struct AppHeader: Codable, Sendable {
+  public let type: AppType
+  public let name: String
+  public let path: String
+  public enum AppType: String, Codable, Sendable {
     case app
+  }
+  public init(type: AppType, name: String, path: String) {
+    self.type = type
+    self.name = name
+    self.path = path
   }
 }
 

@@ -7,18 +7,18 @@
 
 import Foundation
 
-struct App: Sendable {
-  var header: AppHeader
-  var body: [Element]
-  var data: [String: String]
-  init(header: AppHeader, body: [Element], data: [String: String]) {
+public struct App: Sendable {
+  public var header: AppHeader
+  public var body: [Element]
+  public var data: [String: String]
+  public init(header: AppHeader, body: [Element], data: [String: String]) {
     self.header = header
     self.body = body
     self.data = data
   }
 }
 
-extension HubService {
+public extension HubService {
   func app(_ app: App) -> Self {
     apps.append(app.header)
     return stream(app.header.path) { continuation in
@@ -27,43 +27,43 @@ extension HubService {
   }
 }
 
-struct AppInterface: Codable {
-  var header: AppHeader?
-  var body: [Element]?
+public struct AppInterface: Codable, Sendable {
+  public var header: AppHeader?
+  public var body: [Element]?
   enum CodingKeys: CodingKey {
     case header, body
   }
   
-  init(from decoder: any Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     header = try? container.decodeIfPresent(.header)
     body = try? container.decodeLossy(.body)
   }
-  func encode(to encoder: any Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encodeIfPresent(header, forKey: .header)
     try container.encodeIfPresent(body, forKey: .body)
   }
-  init(header: AppHeader, body: [Element]) {
+  public init(header: AppHeader, body: [Element]) {
     self.header = header
     self.body = body
   }
-  init() {
+  public init() {
     
   }
 }
 
-enum ElementType: String, Codable {
+public enum ElementType: String, Codable {
   case text, textField, button, list, picker, cell, files, fileOperation
 }
 
-protocol ElementProtocol {
+public protocol ElementProtocol {
   var type: ElementType { get }
   var id: String { get }
 }
 
-enum Element: Identifiable, Codable, Sendable {
-  var id: String {
+public enum Element: Identifiable, Codable, Sendable {
+  public var id: String {
     switch self {
     case .text(let a): a.id
     case .textField(let a): a.id
@@ -87,7 +87,7 @@ enum Element: Identifiable, Codable, Sendable {
     case type
   }
   
-  init(from decoder: any Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     do {
       let value: String = try decoder.decode()
       self = .text(Text(value: value))
@@ -114,7 +114,7 @@ enum Element: Identifiable, Codable, Sendable {
       }
     }
   }
-  func encode(to encoder: any Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     switch self {
     case .text(let text):
@@ -143,152 +143,144 @@ enum Element: Identifiable, Codable, Sendable {
       try fileOperation.encode(to: encoder)
     }
   }
-  struct Text: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .text }
-    let id = UUID().uuidString
-    let value: String
-    let secondary: Bool
+  public struct Text: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .text }
+    public let id = UUID().uuidString
+    public let value: String
+    public let secondary: Bool
     enum CodingKeys: CodingKey {
       case value
       case secondary
     }
-    init(value: String) {
+    public init(value: String, secondary: Bool = false) {
       self.value = value
-      self.secondary = false
+      self.secondary = secondary
     }
-    init(from decoder: any Decoder) throws {
+    public init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: CodingKeys.self)
       self.value = try container.decode(.value)
       self.secondary = container.decodeIfPresent(.secondary, false)
     }
   }
-  struct TextField: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .textField }
-    let id = UUID().uuidString
-    let value: String
-    let placeholder: String
-    let action: Action?
+  public struct TextField: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .textField }
+    public let id = UUID().uuidString
+    public let value: String
+    public let placeholder: String
+    public let action: Action?
     enum CodingKeys: CodingKey {
       case value, placeholder, action
     }
     
-    init(from decoder: any Decoder) throws {
+      public init(value: String, placeholder: String, action: Element.Action? = nil) {
+        self.value = value
+        self.placeholder = placeholder
+        self.action = action
+      }
+    public init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: CodingKeys.self)
       self.value = try container.decode(.value)
       self.placeholder = container.decodeIfPresent(.placeholder, "")
       self.action = try container.decode(.action)
     }
   }
-  struct Button: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .button }
-    let id = UUID().uuidString
-    let title: String
-    let action: Action
+  public struct Button: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .button }
+    public let id = UUID().uuidString
+    public let title: String
+    public let action: Action
     enum CodingKeys: CodingKey {
       case title
       case action
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      title = try container.decode(.title)
-      action = try container.decode(.action)
+    public init(title: String, action: Action) {
+      self.title = title
+      self.action = action
     }
   }
-  final class List: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .list }
-    let id = UUID().uuidString
-    let data: String
-    let elements: Element
+  public final class List: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .list }
+    public let id = UUID().uuidString
+    public let data: String
+    public let elements: Element
     enum CodingKeys: CodingKey {
       case data, elements
     }
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      data = try container.decode(.data)
-      elements = try container.decode(.elements)
+    public init(data: String, elements: Element) {
+      self.data = data
+      self.elements = elements
     }
   }
-  struct Picker: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .list }
-    let id = UUID().uuidString
-    let options: [String]
-    let selected: String
+  public struct Picker: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .list }
+    public let id = UUID().uuidString
+    public let options: [String]
+    public let selected: String
     enum CodingKeys: CodingKey {
       case options, selected
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      options = try container.decode(.options)
-      selected = try container.decode(.selected)
+    public init(options: [String], selected: String) {
+      self.options = options
+      self.selected = selected
     }
   }
-  final class Cell: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .cell }
-    let id = UUID().uuidString
-    let title: Element?
-    let subtitle: Element?
+  public final class Cell: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .cell }
+    public let id = UUID().uuidString
+    public let title: Element?
+    public let subtitle: Element?
     enum CodingKeys: CodingKey {
       case title, subtitle
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      self.title = try container.decodeIfPresent(.title)
-      self.subtitle = try container.decodeIfPresent(.subtitle)
+    public init(title: Element?, subtitle: Element?) {
+      self.title = title
+      self.subtitle = subtitle
     }
   }
-  final class Files: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .files }
-    let id = UUID().uuidString
-    let title: Element?
-    let value: String
-    let action: Action
+  public final class Files: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .files }
+    public let id = UUID().uuidString
+    public let title: Element?
+    public let value: String
+    public let action: Action
     enum CodingKeys: CodingKey {
       case title, value, action
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      self.title = try container.decodeIfPresent(.title)
-      self.value = try container.decode(.value)
-      self.action = try container.decode(.action)
+    init(title: Element?, value: String, action: Action) {
+      self.title = title
+      self.value = value
+      self.action = action
     }
   }
-  final class FileOperation: ElementProtocol, Identifiable, Codable, Sendable {
-    var type: ElementType { .fileOperation }
-    let id = UUID().uuidString
-    let title: Element?
-    let value: String
-    let action: Action
+  public final class FileOperation: ElementProtocol, Identifiable, Codable, Sendable {
+    public var type: ElementType { .fileOperation }
+    public let id = UUID().uuidString
+    public let title: Element?
+    public let value: String
+    public let action: Action
     enum CodingKeys: CodingKey {
       case title, value, action
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      self.title = try container.decodeIfPresent(.title)
-      self.value = try container.decode(.value)
-      self.action = try container.decode(.action)
+    public init(title: Element?, value: String, action: Action) {
+      self.title = title
+      self.value = value
+      self.action = action
     }
   }
-  struct Action: Codable, Sendable {
-    var path: String
-    var body: ActionBody
-    var output: ActionBody?
+  public struct Action: Codable, Sendable {
+    public var path: String
+    public var body: ActionBody
+    public var output: ActionBody?
     enum CodingKeys: CodingKey {
       case path, body, output
     }
-    
-    init(from decoder: any Decoder) throws {
-      let container = try decoder.container(keyedBy: CodingKeys.self)
-      self.path = try container.decode(.path)
-      self.body = try container.decode(.body)
-      self.output = try container.decodeIfPresent(.output)
+    public init(path: String, body: ActionBody, output: ActionBody? = nil) {
+      self.path = path
+      self.body = body
+      self.output = output
     }
   }
-  enum ActionBody: Codable, Sendable {
+  public enum ActionBody: Codable, Sendable {
     case void
     case single(String)
     case multiple([String: String])
@@ -296,7 +288,7 @@ enum Element: Identifiable, Codable, Sendable {
       case single, multiple
     }
     
-    init(from decoder: any Decoder) throws {
+    public init(from decoder: any Decoder) throws {
       do {
         do {
           self = try .single(decoder.decode())
@@ -308,7 +300,7 @@ enum Element: Identifiable, Codable, Sendable {
       }
     }
     
-    func encode(to encoder: any Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
       var container = encoder.singleValueContainer()
       switch self {
       case .single(let string):
@@ -317,14 +309,6 @@ enum Element: Identifiable, Codable, Sendable {
         try container.encode(dictionary)
       case .void: break
       }
-    }
-  }
-}
-
-extension Dictionary {
-  mutating func insert(contentsOf dictionary: Dictionary) {
-    dictionary.forEach { key, value in
-      self[key] = value
     }
   }
 }
