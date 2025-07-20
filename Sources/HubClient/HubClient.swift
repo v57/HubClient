@@ -19,8 +19,8 @@ public class HubClient {
     get { sender.ws.debug }
     set { sender.ws.debug = newValue }
   }
-  let channel: Channel<Void>
-  let service: HubService
+  public let channel: Channel<Void>
+  public let service: HubService
   private var sender: ClientSender<Void>!
   public init(_ url: URL = HubClient.local, keyChain: KeyChain? = nil) {
     channel = Channel()
