@@ -18,11 +18,11 @@ public class HubService {
   init(channel: Channel<Void>) {
     self.channel = channel
   }
-  public func post<Input: Decodable, Output: Encodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Output)) -> Self {
+  public func post<Input: Decodable & Sendable, Output: Encodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Output)) -> Self {
     _ = channel.post(path, request: request)
     return self
   }
-  public func post<Input: Decodable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Void)) -> Self {
+  public func post<Input: Decodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Void)) -> Self {
     _ = channel.post(path, request: request)
     return self
   }
