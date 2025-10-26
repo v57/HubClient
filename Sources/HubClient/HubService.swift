@@ -123,6 +123,11 @@ public class HubService {
       _ = service?.stream(path, request: request)
       return append(path)
     }
+    public func app(_ app: App) -> Self {
+      _ = service?.app(app)
+      apps.insert(app.header.path)
+      return self
+    }
     private struct Api {
       let type: ApiType
       let path: String
