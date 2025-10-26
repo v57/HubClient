@@ -11,9 +11,15 @@ import Channel
 @MainActor
 public class HubService {
   let channel: Channel<Void>
+  var sender: ClientSender<Void>?
   var apps = [AppHeader]()
   var api: [String] {
     Array(Set(channel.postApi.keys).union(channel.streamApi.keys))
+  }
+  var disabled = Set<String>()
+  var groups = [Group]()
+  private var serviceUpdatesTask: Task<Void, Error>? {
+    didSet { oldValue?.cancel() }
   }
   init(channel: Channel<Void>) {
     self.channel = channel
@@ -42,10 +48,88 @@ public class HubService {
     _ = channel.stream(path, request: request)
     return self
   }
+  fileprivate func sendServiceUpdates() {
+    guard sender?.ws.isConnected == true else { return }
+    serviceUpdatesTask = Task { try await sendServiceUpdates() }
+  }
+  func sendServiceUpdates() async throws {
+    guard let sender else { return }
+    var api = Set(channel.postApi.keys).union(channel.streamApi.keys)
+    var disabledApps = Set<String>()
+    groups.forEach { group in
+      if !group.isEnabled {
+        api.subtract(group.apis)
+        disabledApps.formUnion(group.apps)
+      }
+    }
+    let apps = apps.filter { !disabledApps.contains($0.path) }
+    let update = HubService.Update(services: api.map { ServiceHeader(path: $0) }, apps: apps)
+    if !update.isEmpty {
+      try await sender.send("hub/service/update", update)
+    }
+  }
+  public func group(enabled: Bool) -> Group {
+    let group = Group(service: self, isEnabled: enabled)
+    groups.append(group)
+    return group
+  }
   struct Update: Encodable {
-    var add: [String]
-    var addApps: [AppHeader]
-    var isEmpty: Bool { add.isEmpty && addApps.isEmpty }
+    var services: [ServiceHeader]
+    var apps: [AppHeader]
+    var isEmpty: Bool { services.isEmpty && apps.isEmpty }
+  }
+  
+  @MainActor
+  public class Group {
+    private weak var service: HubService?
+    @MainActor
+    public var isEnabled: Bool {
+      didSet {
+        guard isEnabled != oldValue else { return }
+        service?.sendServiceUpdates()
+      }
+    }
+    fileprivate var apis = Set<String>()
+    fileprivate var apps = Set<String>()
+    init(service: HubService, isEnabled: Bool) {
+      self.service = service
+      self.isEnabled = isEnabled
+    }
+    private func append(_ path: String) -> Self {
+      self.apis.insert(path)
+      return self
+    }
+    public func post<Input: Decodable & Sendable, Output: Encodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Output)) -> Self {
+      _ = service?.post(path, request: request)
+      return append(path)
+    }
+    public func post<Input: Decodable & Sendable>(_ path: String, request: @escaping (@Sendable (Input) async throws -> Void)) -> Self {
+      _ = service?.post(path, request: request)
+      return append(path)
+    }
+    public func post<Output: Encodable & Sendable>(_ path: String, request: @escaping (@Sendable () async throws -> Output)) -> Self {
+      _ = service?.post(path, request: request)
+      return append(path)
+    }
+    public func post(_ path: String, request: @escaping (@Sendable () async throws -> Void)) -> Self {
+      _ = service?.post(path, request: request)
+      return append(path)
+    }
+    public func stream<Input: Decodable & Sendable>(_ path: String, request: @escaping @Sendable (Input, AsyncThrowingStream<Encodable & Sendable, Error>.Continuation) async throws -> Void) -> Self {
+      _ = service?.stream(path, request: request)
+      return append(path)
+    }
+    public func stream(_ path: String, request: @escaping @Sendable (AsyncThrowingStream<Encodable & Sendable, Error>.Continuation) async throws -> Void) -> Self {
+      _ = service?.stream(path, request: request)
+      return append(path)
+    }
+    private struct Api {
+      let type: ApiType
+      let path: String
+    }
+    private enum ApiType {
+      case post, stream, app
+    }
   }
 }
 
@@ -63,3 +147,9 @@ public struct AppHeader: Codable, Sendable {
   }
 }
 
+struct ServiceHeader: Encodable, Sendable {
+  let path: String
+  init(path: String) {
+    self.path = path
+  }
+}

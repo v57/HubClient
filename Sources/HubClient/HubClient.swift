@@ -27,6 +27,7 @@ public class HubClient {
     service = HubService(channel: channel)
     if let keyChain {
       sender = nil
+      service.sender = sender
       sender = channel.connect(url, options: ClientOptions(headers: {
         let key = keyChain.publicKey()
         let time = "\(Int(Date().timeIntervalSince1970 + 60))"
@@ -34,13 +35,11 @@ public class HubClient {
         return ["auth": "key.\(key).\(sign).\(time)"]
       }, onConnect: { [weak self] sender in
         guard let self else { return }
-        let update = await HubService.Update(add: service.api, addApps: service.apps)
-        if !update.isEmpty {
-          try await sender.send("hub/service/update", update)
-        }
+        try await service.sendServiceUpdates()
       }))
     } else {
       sender = channel.connect(url)
+      service.sender = sender
     }
   }
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
