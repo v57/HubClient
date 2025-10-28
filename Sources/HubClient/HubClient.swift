@@ -26,8 +26,6 @@ public class HubClient {
     channel = Channel()
     service = HubService(channel: channel)
     if let keyChain {
-      sender = nil
-      service.sender = sender
       sender = channel.connect(url, options: ClientOptions(headers: {
         let key = keyChain.publicKey()
         let time = "\(Int(Date().timeIntervalSince1970 + 60))"
@@ -39,8 +37,8 @@ public class HubClient {
       }))
     } else {
       sender = channel.connect(url)
-      service.sender = sender
     }
+    service.sender = sender
   }
   public func send<Output: Decodable>(_ path: String) async throws -> Output {
     try await sender.send(path)
