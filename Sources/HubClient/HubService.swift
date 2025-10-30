@@ -48,9 +48,12 @@ public class HubService {
     _ = channel.stream(path, request: request)
     return self
   }
-  fileprivate func sendServiceUpdates() {
+  public func sendServiceUpdates() {
     guard sender?.ws.isConnected == true else { return }
-    serviceUpdatesTask = Task { try await sendServiceUpdates() }
+    serviceUpdatesTask = Task {
+      try await Task.sleep(nanoseconds: 100_000_000)
+      try await sendServiceUpdates()
+    }
   }
   func sendServiceUpdates() async throws {
     guard let sender else { return }
