@@ -16,7 +16,7 @@ public struct KeyChain: Sendable {
   private let privateKey: Curve25519.Signing.PrivateKey
   public init(keyChain: String? = nil) {
     if let keyChain,
-       let keyData = KeyChain.fromKeychain(tag: keyChain),
+       let keyData: Data = KeyChain.fromKeychain(tag: keyChain),
        let key = try? Curve25519.Signing.PrivateKey(rawRepresentation: keyData) {
       self.privateKey = key
     } else if let keyData = KeyChain.fromFile(),
@@ -25,7 +25,7 @@ public struct KeyChain: Sendable {
     } else {
       let key = Curve25519.Signing.PrivateKey()
       let raw = key.rawRepresentation
-      if let keyChain, KeyChain.storeInKeyChain(data: raw, tag: keyChain) {
+      if let keyChain, KeyChain.storeInKeychain(data: raw, tag: keyChain) {
         self.privateKey = key
       } else {
         KeyChain.storeInFile(data: raw)
@@ -46,37 +46,31 @@ public struct KeyChain: Sendable {
   }
 
   // MARK: - Storage Helpers
-
-  private static func fromKeychain(tag: String) -> Data? {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: tag,
-      kSecReturnData as String: kCFBooleanTrue!,
-      kSecMatchLimit as String: kSecMatchLimitOne
-    ]
-    
-    var dataTypeRef: AnyObject?
-    let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-    
-    guard status == errSecSuccess, let data = dataTypeRef as? Data else {
-      return nil
-    }
-    
-    return data
+  public static func fromKeychain<T>(tag: String) -> T? {
+    let query = [
+      kSecClass: kSecClassGenericPassword,
+      kSecAttrService: tag,
+      kSecReturnData: kCFBooleanTrue!,
+      kSecMatchLimit: kSecMatchLimitOne
+    ] as [CFString: Any] as CFDictionary
+    var value: AnyObject?
+    let status = SecItemCopyMatching(query, &value)
+    guard status == errSecSuccess else { return nil }
+    return value as? T
   }
 
   private static func fromFile() -> Data? {
     try? Data(contentsOf: fileURL)
   }
 
-  private static func storeInKeyChain(data: Data, tag: String) -> Bool {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: tag,
-      kSecValueData as String: data
-    ]
-    SecItemDelete(query as CFDictionary)
-    return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+  public static func storeInKeychain<T>(data: T, tag: String) -> Bool {
+    let query = [
+      kSecClass: kSecClassGenericPassword,
+      kSecAttrService: tag,
+      kSecValueData: data
+    ] as [CFString: Any] as CFDictionary
+    SecItemDelete(query)
+    return SecItemAdd(query, nil) == errSecSuccess
   }
 
   private static func storeInFile(data: Data) {
