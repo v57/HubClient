@@ -5,7 +5,11 @@
 //  Created by Dmitry Kozlov on 2/6/25.
 //
 
+#if canImport(SwiftCrossUI)
+import SwiftCrossUI
+#else
 import SwiftUI
+#endif
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 struct AsyncButton<Label: View & SendableMetatype>: View {
@@ -45,7 +49,7 @@ extension AsyncButton where Label == Text {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
+extension AsyncButton where Label == SwiftUILabel<Text, Image> {
   init(_ titleKey: LocalizedStringKey, systemImage: String, action: @escaping @MainActor () async throws -> Void) {
     self.action = action
     self.label = Label(titleKey, systemImage: systemImage)
@@ -57,7 +61,7 @@ extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
 }
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
+extension AsyncButton where Label == SwiftUILabel<Text, Image> {
   init(_ titleKey: LocalizedStringKey, image: ImageResource, action: @escaping @MainActor () async throws -> Void) {
     self.action = action
     self.label = Label(titleKey, image: image)
@@ -93,7 +97,7 @@ extension AsyncButton where Label == Text {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
+extension AsyncButton where Label == SwiftUILabel<Text, Image> {
   init(_ titleKey: LocalizedStringKey, systemImage: String, role: ButtonRole?, action: @escaping @MainActor () async throws -> Void) {
     self.action = action
     self.label = Label(titleKey, systemImage: systemImage)
@@ -108,7 +112,7 @@ extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
 }
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
+extension AsyncButton where Label == SwiftUILabel<Text, Image> {
   init(_ titleKey: LocalizedStringKey, image: ImageResource, role: ButtonRole?, action: @escaping @MainActor () async throws -> Void) {
     self.action = action
     self.label = Label(titleKey, image: image)

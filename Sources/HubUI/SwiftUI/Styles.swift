@@ -5,7 +5,11 @@
 //  Created by Linux on 04.04.26.
 //
 
+#if canImport(SwiftCrossUI)
+import SwiftCrossUI
+#else
 import SwiftUI
+#endif
 
 var interfaceScale: Double {
 #if os(tvOS)
@@ -73,7 +77,7 @@ public extension View {
     self
 #endif
   }
-  func dropFiles<Transferable: SwiftUI.Transferable>(action: @escaping ([Transferable], CGPoint) -> Bool) -> some View {
+  func dropFiles<Transferable: SwiftUITransferable>(action: @escaping ([Transferable], CGPoint) -> Bool) -> some View {
 #if os(iOS) || os(macOS)
     dropDestination(action: action)
 #else
@@ -103,7 +107,7 @@ public struct TabButtonStyle: ButtonStyle {
       .animation(.spring, value: isFocused)
       .contentTransition(.numericText())
   }
-  struct LabelStyle: SwiftUI.LabelStyle {
+  struct LabelStyle: SwiftUILabelStyle {
     func makeBody(configuration: Configuration) -> some View {
       HStack(spacing: 4 * interfaceScale) {
         configuration.icon.frame(height: 0).contentTransition(.symbolEffect)

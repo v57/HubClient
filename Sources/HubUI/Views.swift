@@ -5,7 +5,11 @@
 //  Created by Dmitry Kozlov on 6/7/25.
 //
 
+#if canImport(SwiftCrossUI)
+import SwiftCrossUI
+#else
 import SwiftUI
+#endif
 import Combine
 import HubService
 
@@ -147,7 +151,7 @@ extension Element: View {
     case .cell(let a): CellView(value: a)
     case .files(let a): FilesView(value: a)
     case .fileOperation(let a): FileOperationView(value: a)
-    case .spacer: SwiftUI.Spacer()
+    case .spacer: SwiftUISpacer()
     case .hstack(let a): HStackView(value: a)
     case .vstack(let a): VStackView(value: a)
     case .zstack(let a): ZStackView(value: a)
@@ -162,9 +166,9 @@ extension Element: View {
     var body: some View {
       if let text = state.translate(value.value) {
         if value.secondary {
-          SwiftUI.Text(text).textSelection().secondary()
+          SwiftUIText(text).textSelection().secondary()
         } else {
-          SwiftUI.Text(text).textSelection()
+          SwiftUIText(text).textSelection()
         }
       }
     }
@@ -184,7 +188,7 @@ extension Element: View {
     var body: some View {
       if let current = state.double(value.value) {
         let progress = progress(current: current)
-        SwiftUI.ZStack {
+        SwiftUIZStack {
           Circle().trim(from: 0, to: 1)
             .stroke(.hubTint.opacity(0.2), lineWidth: 3)
           Circle().trim(from: 0, to: progress)
@@ -204,7 +208,7 @@ extension Element: View {
   struct HStackView: View {
     let value: HStack
     var body: some View {
-      SwiftUI.HStack(spacing: value.spacing?.cg) {
+      SwiftUIHStack(spacing: value.spacing?.cg) {
         ForEach(value.content) { $0 }
       }
     }
@@ -212,7 +216,7 @@ extension Element: View {
   struct VStackView: View {
     let value: VStack
     var body: some View {
-      SwiftUI.VStack(spacing: value.spacing?.cg) {
+      SwiftUIVStack(spacing: value.spacing?.cg) {
         ForEach(value.content) { $0 }
       }
     }
@@ -220,7 +224,7 @@ extension Element: View {
   struct ZStackView: View {
     let value: ZStack
     var body: some View {
-      SwiftUI.ZStack {
+      SwiftUIZStack {
         ForEach(value.content) { $0 }
       }
     }
@@ -232,7 +236,7 @@ extension Element: View {
     let state = AppState()
     var body: some View {
       let data = state.string(value.value)
-      SwiftUI.TextField(value.placeholder, text: $text)
+      SwiftUITextField(value.placeholder, text: $text)
         .task(id: data) {
           if let data, data != text {
             disableUpdates = true
@@ -255,9 +259,9 @@ extension Element: View {
     @State var selected: String = ""
     let state = AppState()
     var body: some View {
-      SwiftUI.Picker("", selection: state.stringBinding(value.selected, defaultValue: "")) {
+      SwiftUIPicker("", selection: state.stringBinding(value.selected, defaultValue: "")) {
         ForEach(value.options, id: \.self) { value in
-          SwiftUI.Text(value).tag(value)
+          SwiftUIText(value).tag(value)
         }
       }
     }
@@ -271,12 +275,12 @@ extension Element: View {
     var body: some View {
       let v = state.doubleBinding(value.value, defaultValue: value.max)
 #if os(tvOS)
-      SwiftUI.Text("Sliders are not available on Apple TV").note()
+      SwiftUIText("Sliders are not available on Apple TV").note()
 #else
       if let step = value.step {
-        SwiftUI.Slider(value: v, in: range, step: step).frame(maxWidth: 150)
+        SwiftUISlider(value: v, in: range, step: step).frame(maxWidth: 150)
       } else {
-        SwiftUI.Slider(value: v, in: range).frame(maxWidth: 150)
+        SwiftUISlider(value: v, in: range).frame(maxWidth: 150)
       }
 #endif
     }
@@ -297,8 +301,8 @@ extension Element: View {
     @Environment(ServiceApp.self) var app
     var body: some View {
       if let list = app.lists[value.data] {
-        SwiftUI.ForEach(list) { data in
-          SwiftUI.HStack {
+        SwiftUIForEach(list) { data in
+          SwiftUIHStack {
             value.content
           }.environment(data)
         }
@@ -308,7 +312,7 @@ extension Element: View {
   struct CellView: View {
     let value: Cell
     var body: some View {
-      SwiftUI.VStack(alignment: .leading) {
+      SwiftUIVStack(alignment: .leading) {
         value.title?.secondary()
         value.subtitle
       }
@@ -323,12 +327,12 @@ extension Element: View {
     var body: some View {
       RoundedRectangle(cornerRadius: 16).fill(Color.gray.opacity(0.1))
         .frame(height: 80).overlay {
-          SwiftUI.List(files, id: \.self) { name in
+          SwiftUIList(files, id: \.self) { name in
             HubFiles.NameView(file: FileInfo(name: name, size: 0, lastModified: nil), path: path)
           }.environment(UploadManager.main).progressDraw()
           if files.isEmpty {
-            SwiftUI.VStack {
-              SwiftUI.Text("Drop files").foregroundStyle(.secondary)
+            SwiftUIVStack {
+              SwiftUIText("Drop files").foregroundStyle(.secondary)
               value.title
             }
           }
@@ -364,8 +368,8 @@ extension Element: View {
       RoundedRectangle(cornerRadius: 16).fill(Color.gray.opacity(0.1))
         .frame(height: 140).overlay {
           if files.isEmpty {
-            SwiftUI.VStack {
-              SwiftUI.Text("Drop files")
+            SwiftUIVStack {
+              SwiftUIText("Drop files")
                 .foregroundStyle(.secondary)
               value.title
             }.transition(.blurReplace)
@@ -541,5 +545,9 @@ struct LargeProgressView: View {
 }
 
 private extension Double {
+#if canImport(SwiftCrossUI)
+  var cg: Double { self }
+#else
   var cg: CGFloat { CGFloat(self) }
+#endif
 }

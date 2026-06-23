@@ -6,7 +6,11 @@
 //
 
 import HubService
+#if canImport(SwiftCrossUI)
+import SwiftCrossUI
+#else
 import SwiftUI
+#endif
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 extension View {
@@ -37,7 +41,7 @@ public struct ServiceProvider: Codable, Sendable, Hashable, Identifiable {
     
     var body: some View {
       if !providers.isEmpty {
-        SwiftUI.Picker("Provider", selection: $context.service) {
+        SwiftUIPicker("Provider", selection: $context.service) {
           Text("Automatic").tag(Optional<String>.none)
           ForEach(providers) { provider in
             Text(provider.label).tag(provider.id)

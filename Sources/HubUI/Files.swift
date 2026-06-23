@@ -5,7 +5,11 @@
 //  Created by Linux on 13.07.25.
 //
 
+#if canImport(SwiftCrossUI)
+import SwiftCrossUI
+#else
 import SwiftUI
+#endif
 import UniformTypeIdentifiers
 import HubService
 
