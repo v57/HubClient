@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Combine
 import Channel
 
 @MainActor
@@ -14,8 +13,10 @@ public class HubClient: @MainActor Identifiable {
   public static let test = HubClient(connect: false)
   public var id: URL { url }
   public nonisolated static var local: URL { URL(string: "ws://127.0.0.1:1997")! }
-  public var isConnected: Published<Bool>.Publisher {
-    sender.ws.$isConnected
+  public var isConnected: Bool { sender.ws.isConnected }
+  public var isConnectedChanged: ((Bool) -> Void)? {
+    get { sender.ws.isConnectedChanged }
+    set { sender.ws.isConnectedChanged = newValue }
   }
   public var debugNetwork: Bool {
     get { sender.ws.debug }

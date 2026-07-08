@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 import HubService
 
 private extension HubClient {
-  static let test = HubClient(URL(string: "ws://127.0.0.1:1997")!, keyChain: KeyChain())
+  static let test = HubClient(URL(string: "ws://127.0.0.1:1997")!, keyChain: .documents)
 }
 
 @available(macOS 14.0, iOS 17.0, tvOS 17.0, watchOS 10.0, *)
@@ -344,9 +344,9 @@ public extension View {
     }
   }
 }
-extension String {
+public extension String {
   func copyToClipboard() {
-    #if os(macOS)
+    #if os(macOS) && !canImport(SwiftCrossUI)
     let pasteboard = NSPasteboard.general
     pasteboard.clearContents()
     pasteboard.setString(self, forType: .string)

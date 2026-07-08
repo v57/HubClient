@@ -111,7 +111,7 @@ public class HubService {
   public class Group {
     private weak var service: HubService?
     @MainActor
-    @Published public var isEnabled: Bool {
+    public var isEnabled: Bool {
       didSet {
         guard isEnabled != oldValue else { return }
         service?.sendServiceUpdates()
