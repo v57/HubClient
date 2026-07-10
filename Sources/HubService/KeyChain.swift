@@ -13,20 +13,17 @@ import CryptoKit
 #endif
 
 public struct KeyChain: Sendable {
-  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
-  public static var test: KeyChain { .documents }
-  #else
-  public static var test: KeyChain { .home }
-  #endif
   @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
   public static var home: KeyChain { KeyChain(.home) }
   public static var documents: KeyChain { KeyChain(.documents) }
   public static func file(_ url: URL) -> KeyChain {
     KeyChain(.file(url))
   }
+#if canImport(Security)
   public static func keychain(_ tag: String) -> KeyChain {
     KeyChain(.keychain(tag))
   }
+#endif
   public enum Location {
     case file(URL)
     static var documents: Location {
