@@ -224,7 +224,6 @@ public extension KeyedDecodingContainer {
 
 @usableFromInline
 enum DecodingWarnings {
-  @usableFromInline
   @TaskLocal static var counter: Counter?
   
   @usableFromInline
